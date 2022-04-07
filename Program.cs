@@ -24,8 +24,9 @@ namespace RuleEngine.Cli
                 var assemblyPath = Assembly.GetExecutingAssembly().Location;
                 Directory.SetCurrentDirectory(Directory.GetParent(assemblyPath)!.FullName);
 
-                var hostBuilder = args.CreateMassTransitHostBuilder(null, null
-                    , ConfigureServices, Assembly.GetExecutingAssembly());
+                var hostBuilder = Host.CreateDefaultBuilder(args);
+                hostBuilder = hostBuilder.ConfigureMassTransitConsumers(null, null
+                    , Assembly.GetExecutingAssembly());
                 hostBuilder = hostBuilder.UseWindowsService(); //automatically detects whether in Service or Console...
                 //hostBuilder = hostBuilder.UseConsoleLifetime(); ...therefore this is not needed and even toxic for Windows-Service
                 var host = hostBuilder.Build();

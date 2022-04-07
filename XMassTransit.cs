@@ -110,7 +110,7 @@ namespace RuleEngine.Cli
             , params Assembly[] assemblies)
         {
             var hostBuilder = CreateDefaultBuilder(args);
-            ConfigureMassTransitConsumers(hostBuilder, configureBus, configureRabbitMq, assemblies);
+            hostBuilder.ConfigureMassTransitConsumers(configureBus, configureRabbitMq, assemblies);
             if (configureServices is not null)
             {
                 hostBuilder.ConfigureServices(configureServices);
@@ -118,7 +118,7 @@ namespace RuleEngine.Cli
             return hostBuilder;
         }
 
-        public static void ConfigureMassTransitConsumers(IHostBuilder hostBuilder,
+        public static IHostBuilder ConfigureMassTransitConsumers(this IHostBuilder hostBuilder,
             Action<IServiceCollectionBusConfigurator, HostBuilderContext>? configureBus,
             Action<IRabbitMqBusFactoryConfigurator, HostBuilderContext>? configureRabbitMq,
             params Assembly[] assemblies)
@@ -130,6 +130,7 @@ namespace RuleEngine.Cli
                     => (configureRabbitMq ?? ConfigureRabbitMq).Invoke(c, context), assemblies);
                 services.AddMassTransitHostedService(WaitUntilHostIsStarted);
             });
+            return hostBuilder;
         }
 
         public static IHostBuilder CreateMassTransitHostBuilder
