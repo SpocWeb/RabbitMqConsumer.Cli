@@ -7,3 +7,9 @@ to register all Consumers in a given List of Assemblies.
 This also demonstrates how to Run a generic Host in .NET FW 4.8 
 
 Comments in Program.cs explain how to avoid possible Pitfalls.
+
+To run this you need to
+* install RabbitMq  
+* fill a Queue with Messages matching RuleEngineCommand.cs or your own Message Class
+* configure the RabbitMQ Queue and virtual Host/Path in appSettings.json
+
