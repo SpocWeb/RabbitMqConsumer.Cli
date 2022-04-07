@@ -11,5 +11,5 @@ Comments in Program.cs explain how to avoid possible Pitfalls.
 To run this you need to
 * install RabbitMq  
 * fill a Queue with Messages matching RuleEngineCommand.cs or your own Message Class
-* configure the RabbitMQ Queue and virtual Host/Path in appSettings.json
+* configure the RabbitMQ Queue and virtual Host/Path in appSettings.json [as explained here](https://masstransit-project.com/usage/transports/rabbitmq.html#configuration)
 
