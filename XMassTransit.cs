@@ -10,9 +10,10 @@ using MassTransit.Transactions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using Workflow.Masstransit;
 using IHost = Microsoft.Extensions.Hosting.IHost;
 
-namespace Workflow.Masstransit
+namespace RuleEngine.Cli
 {
     public static class XMassTransit {
 
@@ -28,17 +29,10 @@ namespace Workflow.Masstransit
         public static bool IsRunningInContainer => _isRunningInContainer ??= bool.TryParse(Environment
             .GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), out var inContainer) && inContainer;
 
-        /// <summary> Start configuring extra Services with this Action, followed by <see cref="XAction.Concat{T0}"/> </summary>
-        public static readonly Action<IServiceCollectionBusConfigurator> Configure = _ => { };
-
         /// <summary> Adds DI <see cref="IRequestClient{TMessage}"/> to the <paramref name="configurator"/> </summary>
         /// <remarks>Can be used to get an async Response</remarks>
         public static void AddRequestClientFor<TMessage>(IServiceCollectionBusConfigurator configurator) 
             where TMessage : class => configurator.AddRequestClient<TMessage>();
-
-        public static Action<IServiceCollectionBusConfigurator> AddRequestClientFor<TMessage>
-            (this Action<IServiceCollectionBusConfigurator> a0) 
-            where TMessage : class => a0.Concat(AddRequestClientFor<TMessage>);
 
         /// <summary> Adds all Consumers, Activities etc. from the <paramref name="assemblies"/> </summary>
         public static void AddMassTransitServicesFrom(this IServiceCollection services
@@ -115,20 +109,27 @@ namespace Workflow.Masstransit
             , Action<HostBuilderContext, IServiceCollection>? configureServices = null
             , params Assembly[] assemblies)
         {
-            void ConfigureDelegate(HostBuilderContext context, IServiceCollection services)
-            {
-                services.AddMassTransitServicesFrom(c
-                    => configureBus?.Invoke(c, context), c 
-                    => (configureRabbitMq ?? ConfigureRabbitMq).Invoke(c, context), assemblies);
-                services.AddMassTransitHostedService(WaitUntilHostIsStarted);
-            }
-
-            var hostBuilder = CreateDefaultBuilder(args).ConfigureServices(ConfigureDelegate);
+            var hostBuilder = CreateDefaultBuilder(args);
+            ConfigureMassTransitConsumers(hostBuilder, configureBus, configureRabbitMq, assemblies);
             if (configureServices is not null)
             {
                 hostBuilder.ConfigureServices(configureServices);
             }
             return hostBuilder;
+        }
+
+        public static void ConfigureMassTransitConsumers(IHostBuilder hostBuilder,
+            Action<IServiceCollectionBusConfigurator, HostBuilderContext>? configureBus,
+            Action<IRabbitMqBusFactoryConfigurator, HostBuilderContext>? configureRabbitMq,
+            params Assembly[] assemblies)
+        {
+            hostBuilder.ConfigureServices((context, services) =>
+            {
+                services.AddMassTransitServicesFrom(c
+                    => configureBus?.Invoke(c, context), c
+                    => (configureRabbitMq ?? ConfigureRabbitMq).Invoke(c, context), assemblies);
+                services.AddMassTransitHostedService(WaitUntilHostIsStarted);
+            });
         }
 
         public static IHostBuilder CreateMassTransitHostBuilder
@@ -160,10 +161,8 @@ namespace Workflow.Masstransit
         /// <param name="configureServices">to register additional Services;
         /// alternatively use <see cref="HostBuilder"/>.<see cref="HostBuilder.ConfigureServices"/></param>
         /// <param name="configureRabbitMq">Callback to configure RabbitMq</param>
+        /// <param name="cancel"></param>
         /// <param name="assemblies">List of Assemblies to register Consumers</param>
-#pragma warning disable S103 // Lines should not be too long
-        /// <returns>the generated and started Host to run within a Console (for a Windows Service use <see cref="CreateMassTransitHostBuilder(string[],System.Action{MassTransit.ExtensionsDependencyInjectionIntegration.IServiceCollectionBusConfigurator,Microsoft.Extensions.Hosting.HostBuilderContext}?,System.Action{MassTransit.RabbitMqTransport.IRabbitMqBusFactoryConfigurator,Microsoft.Extensions.Hosting.HostBuilderContext}?,System.Action{Microsoft.Extensions.Hosting.HostBuilderContext,Microsoft.Extensions.DependencyInjection.IServiceCollection}?,System.Reflection.Assembly[])"/></returns>
-#pragma warning restore S103 // Lines should not be too long
         public static async Task<IHost> StartMassTransitHost(this string[] args
             , Action<HostBuilderContext, IServiceCollection>? configureServices = null
             , Action<IRabbitMqBusFactoryConfigurator, HostBuilderContext>? configureRabbitMq = null

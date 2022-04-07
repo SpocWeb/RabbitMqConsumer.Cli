@@ -19,7 +19,7 @@ namespace RuleEngine.Cli
 
         public Task Consume(ConsumeContext<RuleEngineCommand> context)
         {
-            this._logger.LogInformation("Processing {workflowId}", context.Message.WorkflowId);
+            this._logger.LogWarning("Processing {workflowId}", context.Message.WorkflowId);
             Thread.Sleep(999);
             return Task.CompletedTask;
         }
