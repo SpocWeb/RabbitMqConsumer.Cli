@@ -1,5 +1,5 @@
 # RabbitMqConsumer.Cli
-This is a minimal Example for a Windows Service hosting a MassTransit Consumer in .NET Framework 4.8
+This is a minimal Example for a Windows Service hosting a MassTransit 7.3.1 Consumer in .NET Framework 4.8
 
 It uses some extension Methods in XMassTransit.cs to make it easier 
 to register all Consumers in a given List of Assemblies. 
